@@ -72,9 +72,13 @@ function FilterDisplay({
             </Badge>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={onClearAll} type="button">
+        <button
+          onClick={onClearAll}
+          className="px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          type="button"
+        >
           Clear all filters
-        </Button>
+        </button>
       </div>
     </div>
   )
