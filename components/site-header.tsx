@@ -36,7 +36,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn(
                   "transition-colors hover:text-foreground/80",
-                  pathname === item.href ? "text-foreground" : "text-foreground/60",
+                  pathname === item.href ? "text-foreground" : "text-foreground/70",
                 )}
               >
                 {item.name}
@@ -68,7 +68,7 @@ export function SiteHeader() {
                     onClick={() => setIsOpen(false)}
                     className={cn(
                       "transition-colors hover:text-foreground/80",
-                      pathname === item.href ? "text-foreground" : "text-foreground/60",
+                      pathname === item.href ? "text-foreground" : "text-foreground/70",
                     )}
                   >
                     {item.name}
