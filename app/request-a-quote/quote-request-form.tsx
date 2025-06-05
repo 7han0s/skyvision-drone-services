@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,34 +21,31 @@ function SubmitButton() {
   )
 }
 
-function SearchParamsHandler({ onServiceSelect }: { onServiceSelect: (service: string) => void }) {
+export function QuoteRequestForm() {
   const searchParams = useSearchParams()
+  const [message, setMessage] = useState("")
+  const [selectedService, setSelectedService] = useState("")
 
   useEffect(() => {
     const serviceParam = searchParams.get("service")
     if (serviceParam) {
+      // Convert URL parameter to display format
       const serviceMap: { [key: string]: string } = {
         "real-estate-photography": "Real Estate Photography",
         "event-coverage": "Event Coverage",
         "promotional-content": "Promotional Content",
         "tourism-hospitality": "Tourism & Hospitality",
       }
-      onServiceSelect(serviceMap[serviceParam] || "")
+      setSelectedService(serviceMap[serviceParam] || "")
     }
-  }, [searchParams, onServiceSelect])
-
-  return null
-}
-
-export function QuoteRequestForm() {
-  const [message, setMessage] = useState("")
-  const [selectedService, setSelectedService] = useState("")
+  }, [searchParams])
 
   async function handleSubmit(formData: FormData) {
     const result = await submitQuoteRequest(formData)
     setMessage(result.message)
 
     if (result.success) {
+      // Reset form
       const form = document.getElementById("quote-form") as HTMLFormElement
       form?.reset()
       setSelectedService("")
@@ -61,10 +58,6 @@ export function QuoteRequestForm() {
         <CardTitle className="font-display text-2xl">Project Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <Suspense fallback={null}>
-          <SearchParamsHandler onServiceSelect={setSelectedService} />
-        </Suspense>
-
         <form id="quote-form" action={handleSubmit} className="space-y-6">
           {/* Contact Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
