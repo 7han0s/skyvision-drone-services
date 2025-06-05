@@ -39,7 +39,7 @@ export function HeroSection() {
             asChild
             variant="outline"
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-black"
+            className="border-white text-white hover:bg-white hover:text-black bg-black/20 backdrop-blur-sm"
           >
             <Link href="/portfolio">View Our Work</Link>
           </Button>
