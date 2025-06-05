@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { QuoteRequestForm } from "./quote-request-form"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   title: "Request a Quote - Get Custom Pricing for Drone Services",
@@ -22,7 +23,9 @@ export default function RequestQuotePage() {
           </div>
 
           {/* Form */}
-          <QuoteRequestForm />
+          <Suspense fallback={<div className="animate-pulse bg-muted h-96 rounded-lg" />}>
+            <QuoteRequestForm />
+          </Suspense>
 
           {/* Additional Info */}
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
