@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect, useMemo } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -80,48 +80,60 @@ function FilterDisplay({
 
 export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
   const searchParams = useSearchParams()
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
-  const [activeFilters, setActiveFilters] = useState<{ category?: string; tag?: string }>({})
+  const router = useRouter()
 
+  // Get initial filter values from URL
+  const initialCategory = searchParams.get("category") || ""
+  const initialTag = searchParams.get("tag") || ""
+
+  // Use local state for filters to avoid infinite re-renders
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
+  const [tagFilter, setTagFilter] = useState(initialTag)
+
+  // Update local state when URL params change (but only once on mount or external navigation)
   useEffect(() => {
-    const category = searchParams.get("category")
-    const tag = searchParams.get("tag")
+    const category = searchParams.get("category") || ""
+    const tag = searchParams.get("tag") || ""
 
-    const filters = {
-      ...(category && { category }),
-      ...(tag && { tag }),
-    }
+    setCategoryFilter(category)
+    setTagFilter(tag)
+  }, [searchParams])
 
-    setActiveFilters(filters)
-
-    // Filter posts based on active filters
+  // Memoize filtered posts to avoid recalculation on every render
+  const filteredPosts = useMemo(() => {
     let filtered = blogPosts
 
-    if (category && category !== "all") {
-      filtered = filtered.filter((post) => post.category.toLowerCase() === category.toLowerCase())
+    if (categoryFilter && categoryFilter !== "all") {
+      filtered = filtered.filter((post) => post.category.toLowerCase() === categoryFilter.toLowerCase())
     }
 
-    if (tag) {
-      filtered = filtered.filter((post) => post.tags.some((postTag) => postTag.toLowerCase() === tag.toLowerCase()))
+    if (tagFilter) {
+      filtered = filtered.filter((post) =>
+        post.tags.some((postTag) => postTag.toLowerCase() === tagFilter.toLowerCase()),
+      )
     }
 
-    setFilteredPosts(filtered)
-  }, [searchParams, blogPosts])
+    return filtered
+  }, [blogPosts, categoryFilter, tagFilter])
+
+  // Memoize active filters object
+  const activeFilters = useMemo(() => {
+    const filters: { category?: string; tag?: string } = {}
+    if (categoryFilter) filters.category = categoryFilter
+    if (tagFilter) filters.tag = tagFilter
+    return filters
+  }, [categoryFilter, tagFilter])
 
   const clearFilter = (filterType: "category" | "tag") => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete(filterType)
 
     const newUrl = params.toString() ? `/blog?${params.toString()}` : "/blog"
-    window.history.pushState({}, "", newUrl)
-
-    // Trigger a popstate event to update the searchParams
-    window.dispatchEvent(new PopStateEvent("popstate"))
+    router.push(newUrl)
   }
 
   const clearAllFilters = () => {
-    window.history.pushState({}, "", "/blog")
-    window.dispatchEvent(new PopStateEvent("popstate"))
+    router.push("/blog")
   }
 
   return (
