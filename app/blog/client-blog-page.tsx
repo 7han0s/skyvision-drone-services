@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -88,22 +88,9 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // Get initial filter values from URL
-  const initialCategory = searchParams.get("category") || ""
-  const initialTag = searchParams.get("tag") || ""
-
-  // Use local state for filters to avoid infinite re-renders
-  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
-  const [tagFilter, setTagFilter] = useState(initialTag)
-
-  // Update local state when URL params change (but only once on mount or external navigation)
-  useEffect(() => {
-    const category = searchParams.get("category") || ""
-    const tag = searchParams.get("tag") || ""
-
-    setCategoryFilter(category)
-    setTagFilter(tag)
-  }, [searchParams])
+  // Single source of truth from URL params
+  const categoryFilter = searchParams.get("category") || ""
+  const tagFilter = searchParams.get("tag") || ""
 
   // Memoize filtered posts to avoid recalculation on every render
   const filteredPosts = useMemo(() => {
@@ -130,44 +117,55 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
     return filters
   }, [categoryFilter, tagFilter])
 
-  const clearFilter = (filterType: "category" | "tag") => {
-    if (filterType === "category") {
-      setCategoryFilter("")
-    } else {
-      setTagFilter("")
-    }
+  // URL update helper
+  const updateURL = useCallback(
+    (newParams: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString())
 
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete(filterType)
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all") {
+          params.delete(key)
+        } else {
+          params.set(key, value)
+        }
+      })
 
-    const newUrl = params.toString() ? `/blog?${params.toString()}` : "/blog"
-    router.push(newUrl)
-  }
+      const newUrl = params.toString() ? `/blog?${params.toString()}` : "/blog"
+      router.push(newUrl)
+    },
+    [searchParams, router],
+  )
 
-  const clearAllFilters = () => {
-    setCategoryFilter("")
-    setTagFilter("")
+  const clearFilter = useCallback(
+    (filterType: "category" | "tag") => {
+      updateURL({ [filterType]: null })
+    },
+    [updateURL],
+  )
+
+  const clearAllFilters = useCallback(() => {
     router.push("/blog")
-  }
+  }, [router])
 
-  const handleCategoryClick = (category: string) => {
-    const normalizedCategory = category.toLowerCase()
+  const handleCategoryClick = useCallback(
+    (category: string) => {
+      const normalizedCategory = category.toLowerCase()
 
-    if (normalizedCategory === "all") {
-      setCategoryFilter("")
-      router.push("/blog")
-    } else {
-      setCategoryFilter(normalizedCategory)
-      router.push(`/blog?category=${normalizedCategory}`)
-    }
-  }
+      if (normalizedCategory === "all") {
+        updateURL({ category: null })
+      } else {
+        updateURL({ category: normalizedCategory })
+      }
+    },
+    [updateURL],
+  )
 
-  const handleTagClick = (tag: string) => {
-    setTagFilter(tag)
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("tag", tag)
-    router.push(`/blog?${params.toString()}`)
-  }
+  const handleTagClick = useCallback(
+    (tag: string) => {
+      updateURL({ tag })
+    },
+    [updateURL],
+  )
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -352,7 +350,11 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                   <button
                     key={category}
                     onClick={() => handleCategoryClick(category)}
-                    className="block w-full text-left text-sm text-muted-foreground hover:text-orange-500 hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
+                    className={`block w-full text-left text-sm px-2 py-1 rounded transition-colors duration-200 ${
+                      (category.toLowerCase() === "all" && !categoryFilter) || category.toLowerCase() === categoryFilter
+                        ? "bg-orange-100 text-orange-700 font-medium"
+                        : "text-muted-foreground hover:text-orange-500 hover:bg-orange-50"
+                    }`}
                     type="button"
                   >
                     {category}
@@ -372,8 +374,12 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                   .map((tag) => (
                     <button key={tag} onClick={() => handleTagClick(tag)} type="button">
                       <Badge
-                        variant="outline"
-                        className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                        variant={tagFilter === tag ? "default" : "outline"}
+                        className={`text-xs transition-colors duration-200 cursor-pointer ${
+                          tagFilter === tag
+                            ? "bg-orange-500 text-white hover:bg-orange-600"
+                            : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                        }`}
                       >
                         {tag}
                       </Badge>

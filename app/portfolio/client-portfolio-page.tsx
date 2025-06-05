@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -66,9 +66,13 @@ function FilterDisplay({
             </Badge>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={onClearAll} type="button">
+        <button
+          onClick={onClearAll}
+          className="px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          type="button"
+        >
           Clear all filters
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -78,28 +82,15 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // Get initial filter values from URL
-  const initialCategory = searchParams.get("category") || ""
-  const initialType = searchParams.get("type") || ""
-
-  // Use local state for filters to avoid infinite re-renders
-  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
-  const [typeFilter, setTypeFilter] = useState(initialType)
+  // Single source of truth from URL params
+  const categoryFilter = searchParams.get("category") || ""
+  const typeFilter = searchParams.get("type") || ""
 
   const allItems = [...featuredProjects, ...portfolioItems]
 
   // Filter categories and types
   const categories = ["All", ...Array.from(new Set(allItems.map((item) => item.category)))]
   const types = ["All", "Photo", "Video"]
-
-  // Update local state when URL params change (but only once on mount or external navigation)
-  useEffect(() => {
-    const category = searchParams.get("category") || ""
-    const type = searchParams.get("type") || ""
-
-    setCategoryFilter(category)
-    setTypeFilter(type)
-  }, [searchParams])
 
   // Memoize filtered items to avoid recalculation on every render
   const filteredItems = useMemo(() => {
@@ -126,54 +117,61 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
     return filters
   }, [categoryFilter, typeFilter])
 
-  const clearFilter = (filterType: "category" | "type") => {
-    if (filterType === "category") {
-      setCategoryFilter("")
-    } else {
-      setTypeFilter("")
-    }
-
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete(filterType)
-
-    const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
-    router.push(newUrl)
-  }
-
-  const clearAllFilters = () => {
-    setCategoryFilter("")
-    setTypeFilter("")
-    router.push("/portfolio")
-  }
-
-  const handleCategoryClick = (category: string) => {
-    const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
-
-    if (category === "All") {
-      setCategoryFilter("")
-      router.push("/portfolio")
-    } else {
-      setCategoryFilter(normalizedCategory)
-      router.push(`/portfolio?category=${normalizedCategory}`)
-    }
-  }
-
-  const handleTypeClick = (type: string) => {
-    const normalizedType = type.toLowerCase()
-
-    if (type === "All") {
-      setTypeFilter("")
+  // URL update helper
+  const updateURL = useCallback(
+    (newParams: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString())
-      params.delete("type")
+
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all") {
+          params.delete(key)
+        } else {
+          params.set(key, value)
+        }
+      })
+
       const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
       router.push(newUrl)
-    } else {
-      setTypeFilter(normalizedType)
-      const params = new URLSearchParams(searchParams.toString())
-      params.set("type", normalizedType)
-      router.push(`/portfolio?${params.toString()}`)
-    }
-  }
+    },
+    [searchParams, router],
+  )
+
+  const clearFilter = useCallback(
+    (filterType: "category" | "type") => {
+      updateURL({ [filterType]: null })
+    },
+    [updateURL],
+  )
+
+  const clearAllFilters = useCallback(() => {
+    router.push("/portfolio")
+  }, [router])
+
+  const handleCategoryClick = useCallback(
+    (category: string) => {
+      const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
+
+      if (category === "All") {
+        updateURL({ category: null })
+      } else {
+        updateURL({ category: normalizedCategory })
+      }
+    },
+    [updateURL],
+  )
+
+  const handleTypeClick = useCallback(
+    (type: string) => {
+      const normalizedType = type.toLowerCase()
+
+      if (type === "All") {
+        updateURL({ type: null })
+      } else {
+        updateURL({ type: normalizedType })
+      }
+    },
+    [updateURL],
+  )
 
   return (
     <>
@@ -268,8 +266,18 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
               {categories.map((category) => (
                 <button key={category} onClick={() => handleCategoryClick(category)} type="button">
                   <Badge
-                    variant="outline"
-                    className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                    variant={
+                      (category === "All" && !categoryFilter) ||
+                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter
+                        ? "default"
+                        : "outline"
+                    }
+                    className={`transition-colors duration-200 cursor-pointer ${
+                      (category === "All" && !categoryFilter) ||
+                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter
+                        ? "bg-orange-500 text-white hover:bg-orange-600"
+                        : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                    }`}
                   >
                     {category}
                   </Badge>
@@ -281,8 +289,14 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
               {types.map((type) => (
                 <button key={type} onClick={() => handleTypeClick(type)} type="button">
                   <Badge
-                    variant="outline"
-                    className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                    variant={
+                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter ? "default" : "outline"
+                    }
+                    className={`transition-colors duration-200 cursor-pointer ${
+                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter
+                        ? "bg-orange-500 text-white hover:bg-orange-600"
+                        : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                    }`}
                   >
                     {type}
                   </Badge>
