@@ -1,8 +1,20 @@
+import { VideoHero } from "@/components/video-hero"
+import { getHeroVideos } from "@/lib/video-sources"
+import { isFeatureEnabled } from "@/lib/feature-flags"
 import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
 
 export function HeroSection() {
+  // Check if video hero is enabled
+  const enableVideoHero = isFeatureEnabled("enableVideoHero")
+  const heroVideos = getHeroVideos(2) // Get top 2 videos
+
+  if (enableVideoHero && heroVideos.length > 0) {
+    return <VideoHero videos={heroVideos} autoTransition={true} transitionInterval={15000} />
+  }
+
+  // Fallback to original hero section
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background Video */}
@@ -39,7 +51,7 @@ export function HeroSection() {
             asChild
             variant="outline"
             size="lg"
-            className="border-white text-white hover:bg-white hover:text-black"
+            className="border-white text-white hover:bg-white hover:text-black bg-black/20 backdrop-blur-sm"
           >
             <Link href="/portfolio">View Our Work</Link>
           </Button>

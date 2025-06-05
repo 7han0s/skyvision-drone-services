@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, User } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 const blogPosts = [
   {
@@ -15,6 +16,7 @@ const blogPosts = [
     author: "Sarah Johnson",
     date: "2024-01-15",
     slug: "5-tips-better-real-estate-drone-photography",
+    category: "Real Estate",
   },
   {
     title: "The Future of Aerial Videography in Marketing",
@@ -25,6 +27,7 @@ const blogPosts = [
     author: "Mike Chen",
     date: "2024-01-10",
     slug: "future-aerial-videography-marketing",
+    category: "Marketing",
   },
   {
     title: "Drone Regulations: What You Need to Know",
@@ -35,6 +38,7 @@ const blogPosts = [
     author: "David Rodriguez",
     date: "2024-01-05",
     slug: "drone-regulations-what-you-need-know",
+    category: "Regulations",
   },
 ]
 
@@ -72,6 +76,14 @@ export function BlogPreviewSection() {
                     {post.author}
                   </div>
                 </div>
+                <Link href={`/blog?category=${post.category.toLowerCase()}`}>
+                  <Badge
+                    variant="secondary"
+                    className="mb-2 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer inline-block"
+                  >
+                    {post.category}
+                  </Badge>
+                </Link>
                 <h3 className="font-display font-semibold text-xl mb-2 group-hover:text-orange-500 transition-colors duration-300">
                   <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                 </h3>

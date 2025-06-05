@@ -173,7 +173,7 @@ export default function ServicesPage() {
               asChild
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-orange-500"
+              className="border-white text-white hover:bg-white hover:text-orange-500 bg-orange-600/20 backdrop-blur-sm"
             >
               <Link href="/portfolio">View Our Work</Link>
             </Button>

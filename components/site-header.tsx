@@ -7,19 +7,32 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Camera } from "lucide-react"
+import { isFeatureEnabled } from "@/lib/feature-flags"
 
-const navigation = [
-  { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Services", href: "/services" },
-  { name: "Portfolio", href: "/portfolio" },
-  { name: "Blog", href: "/blog" },
-  { name: "Contact", href: "/contact" },
-]
+// Update the navigation array to be dynamic
+const getNavigation = () => {
+  const baseNavigation = [
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "Services", href: "/services" },
+    { name: "Portfolio", href: "/portfolio" },
+    { name: "Blog", href: "/blog" },
+    { name: "Contact", href: "/contact" },
+  ]
 
+  // Add Partner With Us link if feature flag is enabled
+  if (isFeatureEnabled("showPartnerWithUs")) {
+    baseNavigation.splice(-1, 0, { name: "Partner With Us", href: "/partner-with-us" })
+  }
+
+  return baseNavigation
+}
+
+// Update the component to use dynamic navigation
 export function SiteHeader() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = React.useState(false)
+  const navigation = getNavigation()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -36,7 +49,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn(
                   "transition-colors hover:text-foreground/80",
-                  pathname === item.href ? "text-foreground" : "text-foreground/60",
+                  pathname === item.href ? "text-foreground" : "text-foreground/70",
                 )}
               >
                 {item.name}
@@ -68,7 +81,7 @@ export function SiteHeader() {
                     onClick={() => setIsOpen(false)}
                     className={cn(
                       "transition-colors hover:text-foreground/80",
-                      pathname === item.href ? "text-foreground" : "text-foreground/60",
+                      pathname === item.href ? "text-foreground" : "text-foreground/70",
                     )}
                   >
                     {item.name}
