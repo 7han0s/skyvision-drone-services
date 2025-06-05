@@ -47,6 +47,7 @@ function FilterDisplay({
               <button
                 onClick={() => onClearFilter("category")}
                 className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                type="button"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -58,13 +59,14 @@ function FilterDisplay({
               <button
                 onClick={() => onClearFilter("type")}
                 className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                type="button"
               >
                 <X className="h-3 w-3" />
               </button>
             </Badge>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={onClearAll}>
+        <Button variant="outline" size="sm" onClick={onClearAll} type="button">
           Clear all filters
         </Button>
       </div>
@@ -119,12 +121,18 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
   // Memoize active filters object
   const activeFilters = useMemo(() => {
     const filters: { category?: string; type?: string } = {}
-    if (categoryFilter) filters.category = categoryFilter
-    if (typeFilter) filters.type = typeFilter
+    if (categoryFilter && categoryFilter !== "all") filters.category = categoryFilter
+    if (typeFilter && typeFilter !== "all") filters.type = typeFilter
     return filters
   }, [categoryFilter, typeFilter])
 
   const clearFilter = (filterType: "category" | "type") => {
+    if (filterType === "category") {
+      setCategoryFilter("")
+    } else {
+      setTypeFilter("")
+    }
+
     const params = new URLSearchParams(searchParams.toString())
     params.delete(filterType)
 
@@ -133,7 +141,38 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
   }
 
   const clearAllFilters = () => {
+    setCategoryFilter("")
+    setTypeFilter("")
     router.push("/portfolio")
+  }
+
+  const handleCategoryClick = (category: string) => {
+    const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
+
+    if (category === "All") {
+      setCategoryFilter("")
+      router.push("/portfolio")
+    } else {
+      setCategoryFilter(normalizedCategory)
+      router.push(`/portfolio?category=${normalizedCategory}`)
+    }
+  }
+
+  const handleTypeClick = (type: string) => {
+    const normalizedType = type.toLowerCase()
+
+    if (type === "All") {
+      setTypeFilter("")
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete("type")
+      const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
+      router.push(newUrl)
+    } else {
+      setTypeFilter(normalizedType)
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("type", normalizedType)
+      router.push(`/portfolio?${params.toString()}`)
+    }
   }
 
   return (
@@ -158,14 +197,14 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
                   className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${!isEven ? "lg:grid-flow-col-dense" : ""}`}
                 >
                   <div className={isEven ? "lg:order-1" : "lg:order-2"}>
-                    <Link href={`/portfolio?category=${project.category.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <button onClick={() => handleCategoryClick(project.category)} className="mb-4" type="button">
                       <Badge
                         variant="secondary"
-                        className="mb-4 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
+                        className="hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
                       >
                         {project.category}
                       </Badge>
-                    </Link>
+                    </button>
                     <h3 className="font-display text-3xl md:text-4xl font-bold mb-4">{project.title}</h3>
                     <p className="text-lg text-muted-foreground mb-6">{project.description}</p>
 
@@ -227,34 +266,27 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
             <div className="flex flex-wrap gap-2">
               <span className="text-sm font-medium self-center mr-2">Categories:</span>
               {categories.map((category) => (
-                <Link
-                  key={category}
-                  href={
-                    category === "All"
-                      ? "/portfolio"
-                      : `/portfolio?category=${category.toLowerCase().replace(/\s+/g, "-")}`
-                  }
-                >
+                <button key={category} onClick={() => handleCategoryClick(category)} type="button">
                   <Badge
                     variant="outline"
                     className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
                   >
                     {category}
                   </Badge>
-                </Link>
+                </button>
               ))}
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="text-sm font-medium self-center mr-2">Type:</span>
               {types.map((type) => (
-                <Link key={type} href={type === "All" ? "/portfolio" : `/portfolio?type=${type.toLowerCase()}`}>
+                <button key={type} onClick={() => handleTypeClick(type)} type="button">
                   <Badge
                     variant="outline"
                     className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
                   >
                     {type}
                   </Badge>
-                </Link>
+                </button>
               ))}
             </div>
           </div>
@@ -276,7 +308,7 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
 
                     {/* Type indicator */}
                     <div className="absolute top-4 right-4">
-                      <Link href={`/portfolio?type=${item.type.toLowerCase()}`}>
+                      <button onClick={() => handleTypeClick(item.type)} type="button">
                         <div className="bg-white/90 p-2 rounded-lg hover:bg-white transition-colors duration-200 cursor-pointer">
                           {item.type === "video" ? (
                             <Play className="h-4 w-4 text-orange-500" />
@@ -284,19 +316,23 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
                             <Camera className="h-4 w-4 text-orange-500" />
                           )}
                         </div>
-                      </Link>
+                      </button>
                     </div>
 
                     {/* Content overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <Link href={`/portfolio?category=${item.category.toLowerCase().replace(/\s+/g, "-")}`}>
+                      <button
+                        onClick={() => handleCategoryClick(item.category)}
+                        className="mb-2 inline-block"
+                        type="button"
+                      >
                         <Badge
                           variant="secondary"
-                          className="mb-2 text-xs hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer inline-block"
+                          className="text-xs hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
                         >
                           {item.category}
                         </Badge>
-                      </Link>
+                      </button>
                       <h3 className="font-display font-semibold">{item.title}</h3>
                     </div>
                   </div>

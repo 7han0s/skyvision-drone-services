@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Volume2, VolumeX } from "lucide-react"
 import Link from "next/link"
@@ -15,23 +15,45 @@ interface VideoHeroProps {
 export function VideoHero({ videos, autoTransition = true, transitionInterval = 15000 }: VideoHeroProps) {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
   const [isMuted, setIsMuted] = useState(true)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const nextVideoRef = useRef<HTMLVideoElement>(null)
 
   const currentVideo = videos[currentVideoIndex]
   const nextVideo = videos[(currentVideoIndex + 1) % videos.length]
 
+  // Seamless video transition function
+  const transitionToNext = useCallback(() => {
+    if (videos.length <= 1 || isTransitioning) return
+
+    setIsTransitioning(true)
+
+    // Start fade out
+    if (videoRef.current) {
+      videoRef.current.style.opacity = "0"
+    }
+
+    // After fade out completes, switch videos
+    setTimeout(() => {
+      setCurrentVideoIndex((prev) => (prev + 1) % videos.length)
+
+      // Start fade in
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.style.opacity = "1"
+        }
+        setIsTransitioning(false)
+      }, 100)
+    }, 500)
+  }, [videos.length, isTransitioning])
+
   // Auto-transition between videos
   useEffect(() => {
     if (!autoTransition || videos.length <= 1) return
 
-    const interval = setInterval(() => {
-      setCurrentVideoIndex((prev) => (prev + 1) % videos.length)
-    }, transitionInterval)
-
+    const interval = setInterval(transitionToNext, transitionInterval)
     return () => clearInterval(interval)
-  }, [autoTransition, transitionInterval, videos.length])
+  }, [autoTransition, transitionInterval, transitionToNext])
 
   // Preload next video for seamless transition
   useEffect(() => {
@@ -47,6 +69,27 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
     }
   }
 
+  const switchToVideo = (index: number) => {
+    if (index === currentVideoIndex || isTransitioning) return
+
+    setIsTransitioning(true)
+
+    if (videoRef.current) {
+      videoRef.current.style.opacity = "0"
+    }
+
+    setTimeout(() => {
+      setCurrentVideoIndex(index)
+
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.style.opacity = "1"
+        }
+        setIsTransitioning(false)
+      }, 100)
+    }, 500)
+  }
+
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Current Video */}
@@ -59,8 +102,9 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
           playsInline
           className="hero-video"
           poster={currentVideo.poster}
-          onLoadedData={() => setIsLoaded(true)}
+          style={{ transition: "opacity 0.5s ease-in-out" }}
           key={currentVideo.id}
+          crossOrigin="anonymous"
         >
           <source src={currentVideo.url} type="video/mp4" />
           {/* Fallback image */}
@@ -76,7 +120,7 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
 
         {/* Preload next video (hidden) */}
         {nextVideo && (
-          <video ref={nextVideoRef} muted loop playsInline className="hidden" preload="auto">
+          <video ref={nextVideoRef} muted loop playsInline className="hidden" preload="auto" crossOrigin="anonymous">
             <source src={nextVideo.url} type="video/mp4" />
           </video>
         )}
@@ -114,7 +158,7 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
         {/* Mute/Unmute Button */}
         <button
           onClick={toggleMute}
-          className="bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors duration-200"
+          className="bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors duration-200 backdrop-blur-sm"
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -126,10 +170,11 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
             {videos.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentVideoIndex(index)}
-                className={`w-2 h-8 rounded-full transition-colors duration-200 ${
-                  index === currentVideoIndex ? "bg-orange-500" : "bg-white/50 hover:bg-white/70"
-                }`}
+                onClick={() => switchToVideo(index)}
+                disabled={isTransitioning}
+                className={`w-2 h-8 rounded-full transition-all duration-200 ${
+                  index === currentVideoIndex ? "bg-orange-500 shadow-lg" : "bg-white/50 hover:bg-white/70"
+                } ${isTransitioning ? "opacity-50" : ""}`}
                 aria-label={`Switch to video ${index + 1}`}
               />
             ))}
@@ -139,17 +184,30 @@ export function VideoHero({ videos, autoTransition = true, transitionInterval = 
 
       {/* Video Attribution */}
       {currentVideo.attribution && (
-        <div className="absolute bottom-4 left-4 z-10 text-white/70 text-xs">
-          Video by{" "}
-          <a
-            href={currentVideo.attribution.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white underline"
-          >
-            {currentVideo.attribution.author}
-          </a>{" "}
-          from {currentVideo.attribution.source}
+        <div className="absolute bottom-4 left-4 z-10 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+          <div className="text-white/90 text-xs">
+            Video by{" "}
+            <a
+              href={currentVideo.attribution.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-orange-300 underline font-medium"
+            >
+              {currentVideo.attribution.author}
+            </a>{" "}
+            from{" "}
+            <a
+              href="https://www.pexels.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-orange-300 underline font-medium"
+            >
+              {currentVideo.attribution.source}
+            </a>
+          </div>
+          {currentVideo.attribution.license && (
+            <div className="text-white/70 text-xs mt-1">License: {currentVideo.attribution.license}</div>
+          )}
         </div>
       )}
 

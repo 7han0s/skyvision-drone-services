@@ -53,6 +53,7 @@ function FilterDisplay({
               <button
                 onClick={() => onClearFilter("category")}
                 className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                type="button"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -64,13 +65,14 @@ function FilterDisplay({
               <button
                 onClick={() => onClearFilter("tag")}
                 className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                type="button"
               >
                 <X className="h-3 w-3" />
               </button>
             </Badge>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={onClearAll}>
+        <Button variant="outline" size="sm" onClick={onClearAll} type="button">
           Clear all filters
         </Button>
       </div>
@@ -119,12 +121,18 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
   // Memoize active filters object
   const activeFilters = useMemo(() => {
     const filters: { category?: string; tag?: string } = {}
-    if (categoryFilter) filters.category = categoryFilter
+    if (categoryFilter && categoryFilter !== "all") filters.category = categoryFilter
     if (tagFilter) filters.tag = tagFilter
     return filters
   }, [categoryFilter, tagFilter])
 
   const clearFilter = (filterType: "category" | "tag") => {
+    if (filterType === "category") {
+      setCategoryFilter("")
+    } else {
+      setTagFilter("")
+    }
+
     const params = new URLSearchParams(searchParams.toString())
     params.delete(filterType)
 
@@ -133,7 +141,28 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
   }
 
   const clearAllFilters = () => {
+    setCategoryFilter("")
+    setTagFilter("")
     router.push("/blog")
+  }
+
+  const handleCategoryClick = (category: string) => {
+    const normalizedCategory = category.toLowerCase()
+
+    if (normalizedCategory === "all") {
+      setCategoryFilter("")
+      router.push("/blog")
+    } else {
+      setCategoryFilter(normalizedCategory)
+      router.push(`/blog?category=${normalizedCategory}`)
+    }
+  }
+
+  const handleTagClick = (tag: string) => {
+    setTagFilter(tag)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tag", tag)
+    router.push(`/blog?${params.toString()}`)
   }
 
   return (
@@ -157,14 +186,18 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     />
                   </div>
                   <CardContent className="p-6 flex flex-col justify-center">
-                    <Link href={`/blog?category=${filteredPosts[0].category.toLowerCase()}`}>
+                    <button
+                      onClick={() => handleCategoryClick(filteredPosts[0].category)}
+                      className="w-fit mb-3"
+                      type="button"
+                    >
                       <Badge
                         variant="secondary"
-                        className="w-fit mb-3 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
+                        className="hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
                       >
                         {filteredPosts[0].category}
                       </Badge>
-                    </Link>
+                    </button>
                     <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">
                       <Link href={`/blog/${filteredPosts[0].slug}`} className="hover:text-orange-500 transition-colors">
                         {filteredPosts[0].title}
@@ -184,14 +217,14 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     </div>
                     <div className="flex flex-wrap gap-1 mb-4">
                       {filteredPosts[0].tags.slice(0, 3).map((tag) => (
-                        <Link key={tag} href={`/blog?tag=${tag}`}>
+                        <button key={tag} onClick={() => handleTagClick(tag)} type="button">
                           <Badge
                             variant="outline"
                             className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
                           >
                             {tag}
                           </Badge>
-                        </Link>
+                        </button>
                       ))}
                     </div>
                     <Button asChild variant="outline">
@@ -217,14 +250,14 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     />
                   </div>
                   <CardContent className="p-6">
-                    <Link href={`/blog?category=${post.category.toLowerCase()}`}>
+                    <button onClick={() => handleCategoryClick(post.category)} type="button">
                       <Badge
                         variant="secondary"
                         className="mb-3 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
                       >
                         {post.category}
                       </Badge>
-                    </Link>
+                    </button>
                     <h3 className="font-display font-semibold text-xl mb-2 group-hover:text-orange-500 transition-colors duration-300">
                       <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                     </h3>
@@ -242,14 +275,14 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     </div>
                     <div className="flex flex-wrap gap-1 mb-4">
                       {post.tags.slice(0, 3).map((tag) => (
-                        <Link key={tag} href={`/blog?tag=${tag}`}>
+                        <button key={tag} onClick={() => handleTagClick(tag)} type="button">
                           <Badge
                             variant="outline"
                             className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
                           >
                             {tag}
                           </Badge>
-                        </Link>
+                        </button>
                       ))}
                     </div>
                     <Button asChild variant="outline" size="sm">
@@ -312,13 +345,14 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
               <h3 className="font-display font-semibold text-lg mb-4">Categories</h3>
               <div className="space-y-2">
                 {categories.map((category) => (
-                  <Link
+                  <button
                     key={category}
-                    href={`/blog?category=${category.toLowerCase()}`}
-                    className="block text-sm text-muted-foreground hover:text-orange-500 hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
+                    onClick={() => handleCategoryClick(category)}
+                    className="block w-full text-left text-sm text-muted-foreground hover:text-orange-500 hover:bg-orange-50 px-2 py-1 rounded transition-colors duration-200"
+                    type="button"
                   >
                     {category}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </CardContent>
@@ -332,14 +366,14 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                 {Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
                   .slice(0, 10)
                   .map((tag) => (
-                    <Link key={tag} href={`/blog?tag=${tag}`}>
+                    <button key={tag} onClick={() => handleTagClick(tag)} type="button">
                       <Badge
                         variant="outline"
                         className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
                       >
                         {tag}
                       </Badge>
-                    </Link>
+                    </button>
                   ))}
               </div>
             </CardContent>

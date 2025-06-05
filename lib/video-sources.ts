@@ -13,11 +13,11 @@ export interface VideoSource {
   duration?: number
 }
 
-// Video sources for the hero section
+// Video sources for the hero section with actual Pexels URLs
 export const heroVideoSources: VideoSource[] = [
   {
     id: "pexels-busy-road",
-    url: "https://player.vimeo.com/external/342571552.hd.mp4?s=6c5c6c5c6c5c6c5c6c5c6c5c6c5c6c5c6c5c6c5c&profile_id=175",
+    url: "https://videos.pexels.com/video-files/1263198/1263198-uhd_2560_1440_30fps.mp4",
     type: "pexels",
     title: "Aerial View of Busy Road",
     attribution: {
@@ -26,12 +26,12 @@ export const heroVideoSources: VideoSource[] = [
       license: "Pexels License",
       url: "https://www.pexels.com/video/aerial-view-of-a-busy-road-1263198/",
     },
-    poster: "https://images.pexels.com/videos/1263198/free-video-1263198.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+    poster: "https://images.pexels.com/videos/1263198/free-video-1263198.jpg?auto=compress&cs=tinysrgb&dpr=1&w=1920",
     duration: 15,
   },
   {
     id: "pexels-night-traffic",
-    url: "https://player.vimeo.com/external/342571553.hd.mp4?s=7d6d7d6d7d6d7d6d7d6d7d6d7d6d7d6d7d6d7d6d&profile_id=175",
+    url: "https://videos.pexels.com/video-files/2053855/2053855-uhd_2560_1440_30fps.mp4",
     type: "pexels",
     title: "Aerial View of Vehicles at Night",
     attribution: {
@@ -40,36 +40,8 @@ export const heroVideoSources: VideoSource[] = [
       license: "Pexels License",
       url: "https://www.pexels.com/video/aerial-view-of-vehicles-travelling-at-night-2053855/",
     },
-    poster: "https://images.pexels.com/videos/2053855/free-video-2053855.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+    poster: "https://images.pexels.com/videos/2053855/free-video-2053855.jpg?auto=compress&cs=tinysrgb&dpr=1&w=1920",
     duration: 20,
-  },
-  {
-    id: "pexels-house-car",
-    url: "https://player.vimeo.com/external/342571554.hd.mp4?s=8e7e8e7e8e7e8e7e8e7e8e7e8e7e8e7e8e7e8e7e&profile_id=175",
-    type: "pexels",
-    title: "House with Car Parked in Front",
-    attribution: {
-      author: "Pexels User",
-      source: "Pexels",
-      license: "Pexels License",
-      url: "https://www.pexels.com/video/a-house-with-a-car-parked-in-front-of-it-19120253/",
-    },
-    poster: "https://images.pexels.com/videos/19120253/free-video-19120253.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
-    duration: 12,
-  },
-  {
-    id: "pexels-park-fountain",
-    url: "https://player.vimeo.com/external/342571555.hd.mp4?s=9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f&profile_id=175",
-    type: "pexels",
-    title: "Beautiful Park with Water Fountain",
-    attribution: {
-      author: "Pexels User",
-      source: "Pexels",
-      license: "Pexels License",
-      url: "https://www.pexels.com/video/bird-s-eye-view-of-a-beautiful-park-with-water-fountain-2084684/",
-    },
-    poster: "https://images.pexels.com/videos/2084684/free-video-2084684.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
-    duration: 18,
   },
 ]
 
