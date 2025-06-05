@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, Suspense, useCallback } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Play, Camera } from "lucide-react"
-import { FilterHandler } from "./filter-handler"
+import { Play, Camera, X } from "lucide-react"
 
 interface PortfolioItem {
   id: number
@@ -23,18 +23,106 @@ interface ClientPortfolioPageProps {
   portfolioItems: PortfolioItem[]
 }
 
+function FilterDisplay({
+  activeFilters,
+  onClearFilter,
+  onClearAll,
+}: {
+  activeFilters: { category?: string; type?: string }
+  onClearFilter: (type: "category" | "type") => void
+  onClearAll: () => void
+}) {
+  if (Object.keys(activeFilters).length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mb-8 p-4 bg-muted/50 rounded-lg">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium">Active filters:</span>
+          {activeFilters.category && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Category: {activeFilters.category.replace(/-/g, " ")}
+              <button
+                onClick={() => onClearFilter("category")}
+                className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {activeFilters.type && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Type: {activeFilters.type}
+              <button
+                onClick={() => onClearFilter("type")}
+                className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={onClearAll}>
+          Clear all filters
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function ClientPortfolioPage({ featuredProjects, portfolioItems }: ClientPortfolioPageProps) {
+  const searchParams = useSearchParams()
   const [filteredItems, setFilteredItems] = useState(portfolioItems)
+  const [activeFilters, setActiveFilters] = useState<{ category?: string; type?: string }>({})
+
   const allItems = [...featuredProjects, ...portfolioItems]
 
   // Filter categories and types
   const categories = ["All", ...Array.from(new Set(allItems.map((item) => item.category)))]
   const types = ["All", "Photo", "Video"]
 
-  // Wrap the filter function in useCallback to prevent infinite re-renders
-  const handleFilter = useCallback((filtered: PortfolioItem[]) => {
+  useEffect(() => {
+    const category = searchParams.get("category")
+    const type = searchParams.get("type")
+
+    const filters = {
+      ...(category && { category }),
+      ...(type && { type }),
+    }
+
+    setActiveFilters(filters)
+
+    // Filter items based on active filters
+    let filtered = portfolioItems
+
+    if (category && category !== "all") {
+      filtered = filtered.filter((item) => item.category.toLowerCase().replace(/\s+/g, "-") === category.toLowerCase())
+    }
+
+    if (type && type !== "all") {
+      filtered = filtered.filter((item) => item.type.toLowerCase() === type.toLowerCase())
+    }
+
     setFilteredItems(filtered)
-  }, [])
+  }, [searchParams, portfolioItems])
+
+  const clearFilter = (filterType: "category" | "type") => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete(filterType)
+
+    const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
+    window.history.pushState({}, "", newUrl)
+
+    // Trigger a popstate event to update the searchParams
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }
+
+  const clearAllFilters = () => {
+    window.history.pushState({}, "", "/portfolio")
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }
 
   return (
     <>
@@ -159,9 +247,7 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
             </div>
           </div>
 
-          <Suspense fallback={<div>Loading filters...</div>}>
-            <FilterHandler portfolioItems={portfolioItems} onFilter={handleFilter} />
-          </Suspense>
+          <FilterDisplay activeFilters={activeFilters} onClearFilter={clearFilter} onClearAll={clearAllFilters} />
 
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
