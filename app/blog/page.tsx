@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
-import { ClientBlogPage } from "./client-blog-page"
+import ClientBlogPage from "./client-blog-page"
 
 export const metadata: Metadata = {
   title: "Blog - Drone Photography Tips, Insights & Industry News",

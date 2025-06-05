@@ -28,7 +28,7 @@ interface ClientBlogPageProps {
   recentPosts: BlogPost[]
 }
 
-export default function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
+export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
   const [filteredPosts, setFilteredPosts] = useState(blogPosts)
 
   return (
@@ -225,3 +225,5 @@ export default function ClientBlogPage({ blogPosts, categories, recentPosts }: C
     </div>
   )
 }
+
+export default ClientBlogPage

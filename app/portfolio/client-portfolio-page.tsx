@@ -23,7 +23,7 @@ interface ClientPortfolioPageProps {
   portfolioItems: PortfolioItem[]
 }
 
-export default function ClientPortfolioPage({ featuredProjects, portfolioItems }: ClientPortfolioPageProps) {
+export function ClientPortfolioPage({ featuredProjects, portfolioItems }: ClientPortfolioPageProps) {
   const [filteredItems, setFilteredItems] = useState(portfolioItems)
   const allItems = [...featuredProjects, ...portfolioItems]
 
@@ -214,3 +214,5 @@ export default function ClientPortfolioPage({ featuredProjects, portfolioItems }
     </>
   )
 }
+
+export default ClientPortfolioPage

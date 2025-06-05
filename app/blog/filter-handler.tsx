@@ -44,9 +44,13 @@ export function FilterHandler({ blogPosts, onFilter }: FilterHandlerProps) {
     }
 
     if (tag) {
-      // In a real app, you'd have tags data for each post
-      // For now, we'll just show all posts if a tag is selected
-      filtered = blogPosts
+      // For now, since we don't have tags in the blog posts data structure,
+      // we'll filter by matching the tag with category or title keywords
+      filtered = filtered.filter(
+        (post) =>
+          post.category.toLowerCase().includes(tag.toLowerCase()) ||
+          post.title.toLowerCase().includes(tag.toLowerCase()),
+      )
     }
 
     onFilter(filtered)

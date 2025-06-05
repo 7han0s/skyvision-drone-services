@@ -39,7 +39,7 @@ const blogPosts = {
     date: "2024-01-15",
     category: "Real Estate",
     readTime: "5 min read",
-    tags: ["Real Estate", "Photography", "Tips", "Drone"],
+    tags: ["real-estate", "photography", "tips", "drone"],
   },
   "future-aerial-videography-marketing": {
     title: "The Future of Aerial Videography in Marketing",
@@ -67,7 +67,7 @@ const blogPosts = {
     date: "2024-01-10",
     category: "Marketing",
     readTime: "7 min read",
-    tags: ["Marketing", "Videography", "Technology", "Future"],
+    tags: ["marketing", "videography", "technology", "future"],
   },
   "drone-regulations-what-you-need-know-2024": {
     title: "Drone Regulations: What You Need to Know in 2024",
@@ -99,7 +99,7 @@ const blogPosts = {
     date: "2024-01-05",
     category: "Legal",
     readTime: "6 min read",
-    tags: ["Legal", "Regulations", "Compliance", "FAA"],
+    tags: ["legal", "regulations", "compliance", "faa"],
   },
   "best-practices-event-drone-coverage": {
     title: "Best Practices for Event Drone Coverage",
@@ -134,7 +134,7 @@ const blogPosts = {
     date: "2023-12-28",
     category: "Events",
     readTime: "8 min read",
-    tags: ["Events", "Coverage", "Planning", "Safety"],
+    tags: ["events", "coverage", "planning", "safety"],
   },
   "choosing-right-drone-for-business": {
     title: "Choosing the Right Drone for Your Business",
@@ -169,7 +169,7 @@ const blogPosts = {
     date: "2023-12-20",
     category: "Equipment",
     readTime: "10 min read",
-    tags: ["Equipment", "Business", "Buying Guide", "Drones"],
+    tags: ["equipment", "business", "buying-guide", "drones"],
   },
   "weather-considerations-drone-photography": {
     title: "Weather Considerations for Drone Photography",
@@ -207,7 +207,7 @@ const blogPosts = {
     date: "2023-12-15",
     category: "Tips",
     readTime: "6 min read",
-    tags: ["Weather", "Photography", "Tips", "Safety"],
+    tags: ["weather", "photography", "tips", "safety"],
   },
 }
 
@@ -314,7 +314,7 @@ export default function BlogPostPage({ params }: PageProps) {
               <h3 className="font-display font-semibold mb-4">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
-                  <Link key={tag} href={`/blog?tag=${tag.toLowerCase()}`}>
+                  <Link key={tag} href={`/blog?tag=${tag}`}>
                     <Badge
                       variant="outline"
                       className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"

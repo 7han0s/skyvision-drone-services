@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Suspense } from "react"
-import { ClientPortfolioPage } from "./client-portfolio-page"
+import ClientPortfolioPage from "./client-portfolio-page"
 
 export const metadata: Metadata = {
   title: "Portfolio - Our Best Drone Photography & Videography Work",
