@@ -268,9 +268,14 @@ export default function BlogPostPage({ params }: PageProps) {
           {/* Article Header */}
           <article>
             <header className="mb-8">
-              <Badge variant="secondary" className="mb-4">
-                {post.category}
-              </Badge>
+              <Link href={`/blog?category=${post.category.toLowerCase()}`}>
+                <Badge
+                  variant="secondary"
+                  className="mb-4 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
+                >
+                  {post.category}
+                </Badge>
+              </Link>
               <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">{post.title}</h1>
               <p className="text-xl text-muted-foreground mb-6">{post.excerpt}</p>
 
@@ -309,9 +314,14 @@ export default function BlogPostPage({ params }: PageProps) {
               <h3 className="font-display font-semibold mb-4">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
+                  <Link key={tag} href={`/blog?tag=${tag.toLowerCase()}`}>
+                    <Badge
+                      variant="outline"
+                      className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                    >
+                      {tag}
+                    </Badge>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -333,9 +343,14 @@ export default function BlogPostPage({ params }: PageProps) {
                       />
                     </div>
                     <CardContent className="p-6">
-                      <Badge variant="secondary" className="mb-3">
-                        {relatedPost.category}
-                      </Badge>
+                      <Link href={`/blog?category=${relatedPost.category.toLowerCase()}`}>
+                        <Badge
+                          variant="secondary"
+                          className="mb-3 hover:bg-orange-100 hover:text-orange-700 transition-colors duration-200 cursor-pointer"
+                        >
+                          {relatedPost.category}
+                        </Badge>
+                      </Link>
                       <h3 className="font-display font-semibold text-xl mb-2 group-hover:text-orange-500 transition-colors duration-300">
                         <Link href={`/blog/${relatedPost.slug}`}>{relatedPost.title}</Link>
                       </h3>
