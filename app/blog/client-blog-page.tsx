@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, Suspense, useCallback } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Search } from "lucide-react"
+import { Calendar, User, Search, X } from "lucide-react"
 import { formatDate } from "@/lib/utils"
-import { FilterHandler } from "./filter-handler"
 
 interface BlogPost {
   title: string
@@ -20,6 +20,7 @@ interface BlogPost {
   slug: string
   category: string
   readTime: string
+  tags: string[]
 }
 
 interface ClientBlogPageProps {
@@ -28,22 +29,107 @@ interface ClientBlogPageProps {
   recentPosts: BlogPost[]
 }
 
-export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
+function FilterDisplay({
+  activeFilters,
+  onClearFilter,
+  onClearAll,
+}: {
+  activeFilters: { category?: string; tag?: string }
+  onClearFilter: (type: "category" | "tag") => void
+  onClearAll: () => void
+}) {
+  if (Object.keys(activeFilters).length === 0) {
+    return null
+  }
 
-  // Wrap the filter function in useCallback to prevent infinite re-renders
-  const handleFilter = useCallback((filtered: BlogPost[]) => {
+  return (
+    <div className="mb-8 p-4 bg-muted/50 rounded-lg">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium">Active filters:</span>
+          {activeFilters.category && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Category: {activeFilters.category}
+              <button
+                onClick={() => onClearFilter("category")}
+                className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {activeFilters.tag && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Tag: {activeFilters.tag}
+              <button
+                onClick={() => onClearFilter("tag")}
+                className="ml-1 hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={onClearAll}>
+          Clear all filters
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
+  const searchParams = useSearchParams()
+  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
+  const [activeFilters, setActiveFilters] = useState<{ category?: string; tag?: string }>({})
+
+  useEffect(() => {
+    const category = searchParams.get("category")
+    const tag = searchParams.get("tag")
+
+    const filters = {
+      ...(category && { category }),
+      ...(tag && { tag }),
+    }
+
+    setActiveFilters(filters)
+
+    // Filter posts based on active filters
+    let filtered = blogPosts
+
+    if (category && category !== "all") {
+      filtered = filtered.filter((post) => post.category.toLowerCase() === category.toLowerCase())
+    }
+
+    if (tag) {
+      filtered = filtered.filter((post) => post.tags.some((postTag) => postTag.toLowerCase() === tag.toLowerCase()))
+    }
+
     setFilteredPosts(filtered)
-  }, [])
+  }, [searchParams, blogPosts])
+
+  const clearFilter = (filterType: "category" | "tag") => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete(filterType)
+
+    const newUrl = params.toString() ? `/blog?${params.toString()}` : "/blog"
+    window.history.pushState({}, "", newUrl)
+
+    // Trigger a popstate event to update the searchParams
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }
+
+  const clearAllFilters = () => {
+    window.history.pushState({}, "", "/blog")
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-3">
-          <Suspense fallback={<div>Loading filters...</div>}>
-            <FilterHandler blogPosts={blogPosts} onFilter={handleFilter} />
-          </Suspense>
+          <FilterDisplay activeFilters={activeFilters} onClearFilter={clearFilter} onClearAll={clearAllFilters} />
 
           {/* Featured Post */}
           {filteredPosts.length > 0 && (
@@ -83,6 +169,18 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                         {filteredPosts[0].author}
                       </div>
                       <span>{filteredPosts[0].readTime}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {filteredPosts[0].tags.slice(0, 3).map((tag) => (
+                        <Link key={tag} href={`/blog?tag=${tag}`}>
+                          <Badge
+                            variant="outline"
+                            className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                          >
+                            {tag}
+                          </Badge>
+                        </Link>
+                      ))}
                     </div>
                     <Button asChild variant="outline">
                       <Link href={`/blog/${filteredPosts[0].slug}`}>Read More</Link>
@@ -129,6 +227,18 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                         {post.author}
                       </div>
                       <span>{post.readTime}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <Link key={tag} href={`/blog?tag=${tag}`}>
+                          <Badge
+                            variant="outline"
+                            className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                          >
+                            {tag}
+                          </Badge>
+                        </Link>
+                      ))}
                     </div>
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/blog/${post.slug}`}>Read More</Link>
@@ -198,6 +308,27 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     {category}
                   </Link>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Popular Tags */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-display font-semibold text-lg mb-4">Popular Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
+                  .slice(0, 10)
+                  .map((tag) => (
+                    <Link key={tag} href={`/blog?tag=${tag}`}>
+                      <Badge
+                        variant="outline"
+                        className="text-xs hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors duration-200 cursor-pointer"
+                      >
+                        {tag}
+                      </Badge>
+                    </Link>
+                  ))}
               </div>
             </CardContent>
           </Card>

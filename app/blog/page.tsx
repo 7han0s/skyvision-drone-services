@@ -20,6 +20,7 @@ const blogPosts = [
     slug: "5-tips-better-real-estate-drone-photography",
     category: "Real Estate",
     readTime: "5 min read",
+    tags: ["real-estate", "photography", "tips", "drone"],
   },
   {
     title: "The Future of Aerial Videography in Marketing",
@@ -31,6 +32,7 @@ const blogPosts = [
     slug: "future-aerial-videography-marketing",
     category: "Marketing",
     readTime: "7 min read",
+    tags: ["marketing", "videography", "technology", "future"],
   },
   {
     title: "Drone Regulations: What You Need to Know in 2024",
@@ -43,6 +45,7 @@ const blogPosts = [
     slug: "drone-regulations-what-you-need-know-2024",
     category: "Legal",
     readTime: "6 min read",
+    tags: ["legal", "regulations", "compliance", "faa"],
   },
   {
     title: "Best Practices for Event Drone Coverage",
@@ -55,6 +58,7 @@ const blogPosts = [
     slug: "best-practices-event-drone-coverage",
     category: "Events",
     readTime: "8 min read",
+    tags: ["events", "coverage", "planning", "safety"],
   },
   {
     title: "Choosing the Right Drone for Your Business",
@@ -67,6 +71,7 @@ const blogPosts = [
     slug: "choosing-right-drone-for-business",
     category: "Equipment",
     readTime: "10 min read",
+    tags: ["equipment", "business", "buying-guide", "drones"],
   },
   {
     title: "Weather Considerations for Drone Photography",
@@ -79,6 +84,7 @@ const blogPosts = [
     slug: "weather-considerations-drone-photography",
     category: "Tips",
     readTime: "6 min read",
+    tags: ["weather", "photography", "tips", "safety"],
   },
 ]
 
