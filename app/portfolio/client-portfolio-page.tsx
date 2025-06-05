@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,11 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
   // Filter categories and types
   const categories = ["All", ...Array.from(new Set(allItems.map((item) => item.category)))]
   const types = ["All", "Photo", "Video"]
+
+  // Wrap the filter function in useCallback to prevent infinite re-renders
+  const handleFilter = useCallback((filtered: PortfolioItem[]) => {
+    setFilteredItems(filtered)
+  }, [])
 
   return (
     <>
@@ -155,7 +160,7 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
           </div>
 
           <Suspense fallback={<div>Loading filters...</div>}>
-            <FilterHandler portfolioItems={portfolioItems} onFilter={setFilteredItems} />
+            <FilterHandler portfolioItems={portfolioItems} onFilter={handleFilter} />
           </Suspense>
 
           {filteredItems.length > 0 ? (

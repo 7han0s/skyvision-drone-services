@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -31,13 +31,18 @@ interface ClientBlogPageProps {
 export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
   const [filteredPosts, setFilteredPosts] = useState(blogPosts)
 
+  // Wrap the filter function in useCallback to prevent infinite re-renders
+  const handleFilter = useCallback((filtered: BlogPost[]) => {
+    setFilteredPosts(filtered)
+  }, [])
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-3">
           <Suspense fallback={<div>Loading filters...</div>}>
-            <FilterHandler blogPosts={blogPosts} onFilter={setFilteredPosts} />
+            <FilterHandler blogPosts={blogPosts} onFilter={handleFilter} />
           </Suspense>
 
           {/* Featured Post */}

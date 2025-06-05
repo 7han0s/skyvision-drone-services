@@ -54,7 +54,7 @@ export function FilterHandler({ blogPosts, onFilter }: FilterHandlerProps) {
     }
 
     onFilter(filtered)
-  }, [searchParams, blogPosts, onFilter])
+  }, [searchParams, blogPosts]) // Removed onFilter from dependencies to prevent infinite loop
 
   const clearFilter = (filterType: "category" | "tag") => {
     const params = new URLSearchParams(searchParams.toString())

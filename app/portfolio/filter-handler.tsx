@@ -45,7 +45,7 @@ export function FilterHandler({ portfolioItems, onFilter }: FilterHandlerProps) 
     }
 
     onFilter(filtered)
-  }, [searchParams, portfolioItems, onFilter])
+  }, [searchParams, portfolioItems]) // Removed onFilter from dependencies to prevent infinite loop
 
   const clearFilter = (filterType: "category" | "type") => {
     const params = new URLSearchParams(searchParams.toString())
