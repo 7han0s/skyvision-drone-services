@@ -362,7 +362,7 @@ export default function BlogPostPage({ params }: PageProps) {
               <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600">
                 <Link href="/request-a-quote">Get a Quote</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-50">
                 <Link href="/portfolio">View Our Work</Link>
               </Button>
             </div>
