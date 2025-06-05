@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -87,6 +87,7 @@ function FilterDisplay({
 export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlogPageProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const pathname = usePathname()
 
   // Single source of truth from URL params
   const categoryFilter = searchParams.get("category") || ""
@@ -120,44 +121,55 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
   // URL update helper
   const updateURL = useCallback(
     (newParams: Record<string, string | null>) => {
+      // Create a new URLSearchParams object from the current search params
       const params = new URLSearchParams(searchParams.toString())
 
+      // Update params based on the newParams object
       Object.entries(newParams).forEach(([key, value]) => {
-        if (value === null || value === "" || value === "all") {
+        if (value === null || value === "" || value.toLowerCase() === "all") {
           params.delete(key)
         } else {
           params.set(key, value)
         }
       })
 
-      const newUrl = params.toString() ? `/blog?${params.toString()}` : "/blog"
+      // Create the new URL
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+
+      // Navigate to the new URL
       router.push(newUrl)
     },
-    [searchParams, router],
+    [searchParams, router, pathname],
   )
 
   const clearFilter = useCallback(
     (filterType: "category" | "tag") => {
-      updateURL({ [filterType]: null })
+      // Create a new URLSearchParams object from the current search params
+      const params = new URLSearchParams(searchParams.toString())
+      // Remove the specified filter
+      params.delete(filterType)
+      // Create the new URL
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+      // Navigate to the new URL
+      router.push(newUrl)
     },
-    [updateURL],
+    [searchParams, router, pathname],
   )
 
   const clearAllFilters = useCallback(() => {
-    router.push("/blog")
-  }, [router])
+    // Navigate to the base path without any query parameters
+    router.push(pathname)
+  }, [router, pathname])
 
   const handleCategoryClick = useCallback(
     (category: string) => {
-      const normalizedCategory = category.toLowerCase()
-
-      if (normalizedCategory === "all") {
-        updateURL({ category: null })
+      if (category.toLowerCase() === "all") {
+        clearFilter("category")
       } else {
-        updateURL({ category: normalizedCategory })
+        updateURL({ category: category.toLowerCase() })
       }
     },
-    [updateURL],
+    [updateURL, clearFilter],
   )
 
   const handleTagClick = useCallback(
@@ -298,7 +310,7 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
             <div className="text-center py-12">
               <h3 className="font-display text-2xl font-bold mb-4">No posts found</h3>
               <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all posts.</p>
-              <Button asChild>
+              <Button asChild onClick={clearAllFilters}>
                 <Link href="/blog">View All Posts</Link>
               </Button>
             </div>
@@ -351,7 +363,8 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                     key={category}
                     onClick={() => handleCategoryClick(category)}
                     className={`block w-full text-left text-sm px-2 py-1 rounded transition-colors duration-200 ${
-                      (category.toLowerCase() === "all" && !categoryFilter) || category.toLowerCase() === categoryFilter
+                      (category.toLowerCase() === "all" && !categoryFilter) ||
+                      category.toLowerCase() === categoryFilter.toLowerCase()
                         ? "bg-orange-100 text-orange-700 font-medium"
                         : "text-muted-foreground hover:text-orange-500 hover:bg-orange-50"
                     }`}
@@ -374,9 +387,9 @@ export function ClientBlogPage({ blogPosts, categories, recentPosts }: ClientBlo
                   .map((tag) => (
                     <button key={tag} onClick={() => handleTagClick(tag)} type="button">
                       <Badge
-                        variant={tagFilter === tag ? "default" : "outline"}
+                        variant={tagFilter.toLowerCase() === tag.toLowerCase() ? "default" : "outline"}
                         className={`text-xs transition-colors duration-200 cursor-pointer ${
-                          tagFilter === tag
+                          tagFilter.toLowerCase() === tag.toLowerCase()
                             ? "bg-orange-500 text-white hover:bg-orange-600"
                             : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
                         }`}

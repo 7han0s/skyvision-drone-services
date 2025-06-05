@@ -1,8 +1,7 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import Link from "next/link"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -81,6 +80,7 @@ function FilterDisplay({
 export function ClientPortfolioPage({ featuredProjects, portfolioItems }: ClientPortfolioPageProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const pathname = usePathname()
 
   // Single source of truth from URL params
   const categoryFilter = searchParams.get("category") || ""
@@ -117,60 +117,61 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
     return filters
   }, [categoryFilter, typeFilter])
 
-  // URL update helper
-  const updateURL = useCallback(
-    (newParams: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      Object.entries(newParams).forEach(([key, value]) => {
-        if (value === null || value === "" || value === "all") {
-          params.delete(key)
-        } else {
-          params.set(key, value)
-        }
-      })
-
-      const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
-      router.push(newUrl)
-    },
-    [searchParams, router],
-  )
-
   const clearFilter = useCallback(
     (filterType: "category" | "type") => {
-      updateURL({ [filterType]: null })
+      // Create a new URLSearchParams object from the current search params
+      const params = new URLSearchParams(searchParams.toString())
+      // Remove the specified filter
+      params.delete(filterType)
+      // Create the new URL
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+      // Navigate to the new URL
+      router.push(newUrl)
     },
-    [updateURL],
+    [searchParams, router, pathname],
   )
 
   const clearAllFilters = useCallback(() => {
-    router.push("/portfolio")
-  }, [router])
+    // Navigate to the base path without any query parameters
+    router.push(pathname)
+  }, [router, pathname])
 
   const handleCategoryClick = useCallback(
     (category: string) => {
-      const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
-
       if (category === "All") {
-        updateURL({ category: null })
+        clearFilter("category")
       } else {
-        updateURL({ category: normalizedCategory })
+        const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
+        // Create a new URLSearchParams object from the current search params
+        const params = new URLSearchParams(searchParams.toString())
+        // Set the category parameter
+        params.set("category", normalizedCategory)
+        // Create the new URL
+        const newUrl = `${pathname}?${params.toString()}`
+        // Navigate to the new URL
+        router.push(newUrl)
       }
     },
-    [updateURL],
+    [searchParams, router, pathname, clearFilter],
   )
 
   const handleTypeClick = useCallback(
     (type: string) => {
-      const normalizedType = type.toLowerCase()
-
       if (type === "All") {
-        updateURL({ type: null })
+        clearFilter("type")
       } else {
-        updateURL({ type: normalizedType })
+        const normalizedType = type.toLowerCase()
+        // Create a new URLSearchParams object from the current search params
+        const params = new URLSearchParams(searchParams.toString())
+        // Set the type parameter
+        params.set("type", normalizedType)
+        // Create the new URL
+        const newUrl = `${pathname}?${params.toString()}`
+        // Navigate to the new URL
+        router.push(newUrl)
       }
     },
-    [updateURL],
+    [searchParams, router, pathname, clearFilter],
   )
 
   return (
@@ -268,13 +269,13 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
                   <Badge
                     variant={
                       (category === "All" && !categoryFilter) ||
-                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter
+                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter.toLowerCase()
                         ? "default"
                         : "outline"
                     }
                     className={`transition-colors duration-200 cursor-pointer ${
                       (category === "All" && !categoryFilter) ||
-                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter
+                      category.toLowerCase().replace(/\s+/g, "-") === categoryFilter.toLowerCase()
                         ? "bg-orange-500 text-white hover:bg-orange-600"
                         : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
                     }`}
@@ -290,10 +291,12 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
                 <button key={type} onClick={() => handleTypeClick(type)} type="button">
                   <Badge
                     variant={
-                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter ? "default" : "outline"
+                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter.toLowerCase()
+                        ? "default"
+                        : "outline"
                     }
                     className={`transition-colors duration-200 cursor-pointer ${
-                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter
+                      (type === "All" && !typeFilter) || type.toLowerCase() === typeFilter.toLowerCase()
                         ? "bg-orange-500 text-white hover:bg-orange-600"
                         : "hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
                     }`}
@@ -357,8 +360,8 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
             <div className="text-center py-12">
               <h3 className="font-display text-2xl font-bold mb-4">No projects found</h3>
               <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all projects.</p>
-              <Button asChild>
-                <Link href="/portfolio">View All Projects</Link>
+              <Button onClick={clearAllFilters} type="button">
+                View All Projects
               </Button>
             </div>
           )}
