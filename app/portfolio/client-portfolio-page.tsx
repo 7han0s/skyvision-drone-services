@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect, useMemo } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -74,8 +74,15 @@ function FilterDisplay({
 
 export function ClientPortfolioPage({ featuredProjects, portfolioItems }: ClientPortfolioPageProps) {
   const searchParams = useSearchParams()
-  const [filteredItems, setFilteredItems] = useState(portfolioItems)
-  const [activeFilters, setActiveFilters] = useState<{ category?: string; type?: string }>({})
+  const router = useRouter()
+
+  // Get initial filter values from URL
+  const initialCategory = searchParams.get("category") || ""
+  const initialType = searchParams.get("type") || ""
+
+  // Use local state for filters to avoid infinite re-renders
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
+  const [typeFilter, setTypeFilter] = useState(initialType)
 
   const allItems = [...featuredProjects, ...portfolioItems]
 
@@ -83,45 +90,50 @@ export function ClientPortfolioPage({ featuredProjects, portfolioItems }: Client
   const categories = ["All", ...Array.from(new Set(allItems.map((item) => item.category)))]
   const types = ["All", "Photo", "Video"]
 
+  // Update local state when URL params change (but only once on mount or external navigation)
   useEffect(() => {
-    const category = searchParams.get("category")
-    const type = searchParams.get("type")
+    const category = searchParams.get("category") || ""
+    const type = searchParams.get("type") || ""
 
-    const filters = {
-      ...(category && { category }),
-      ...(type && { type }),
-    }
+    setCategoryFilter(category)
+    setTypeFilter(type)
+  }, [searchParams])
 
-    setActiveFilters(filters)
-
-    // Filter items based on active filters
+  // Memoize filtered items to avoid recalculation on every render
+  const filteredItems = useMemo(() => {
     let filtered = portfolioItems
 
-    if (category && category !== "all") {
-      filtered = filtered.filter((item) => item.category.toLowerCase().replace(/\s+/g, "-") === category.toLowerCase())
+    if (categoryFilter && categoryFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => item.category.toLowerCase().replace(/\s+/g, "-") === categoryFilter.toLowerCase(),
+      )
     }
 
-    if (type && type !== "all") {
-      filtered = filtered.filter((item) => item.type.toLowerCase() === type.toLowerCase())
+    if (typeFilter && typeFilter !== "all") {
+      filtered = filtered.filter((item) => item.type.toLowerCase() === typeFilter.toLowerCase())
     }
 
-    setFilteredItems(filtered)
-  }, [searchParams, portfolioItems])
+    return filtered
+  }, [portfolioItems, categoryFilter, typeFilter])
+
+  // Memoize active filters object
+  const activeFilters = useMemo(() => {
+    const filters: { category?: string; type?: string } = {}
+    if (categoryFilter) filters.category = categoryFilter
+    if (typeFilter) filters.type = typeFilter
+    return filters
+  }, [categoryFilter, typeFilter])
 
   const clearFilter = (filterType: "category" | "type") => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete(filterType)
 
     const newUrl = params.toString() ? `/portfolio?${params.toString()}` : "/portfolio"
-    window.history.pushState({}, "", newUrl)
-
-    // Trigger a popstate event to update the searchParams
-    window.dispatchEvent(new PopStateEvent("popstate"))
+    router.push(newUrl)
   }
 
   const clearAllFilters = () => {
-    window.history.pushState({}, "", "/portfolio")
-    window.dispatchEvent(new PopStateEvent("popstate"))
+    router.push("/portfolio")
   }
 
   return (
